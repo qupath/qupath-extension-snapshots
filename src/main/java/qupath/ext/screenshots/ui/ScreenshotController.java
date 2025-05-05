@@ -68,6 +68,7 @@ public class ScreenshotController extends BorderPane {
     private static final StringProperty nameProperty = PathPrefs.createPersistentPreference("ext.screenshots.name", "");
     private static final BooleanProperty copyProperty = PathPrefs.createPersistentPreference("ext.screenshots.copyToClipboard", false);
     private static final BooleanProperty uniqueNamesProperty = PathPrefs.createPersistentPreference("ext.screenshots.uniqueNames", true);
+    private static final ObjectProperty<Format> formatProperty = PathPrefs.createPersistentPreference("ext.screenshots.format", Format.PNG, Format.class);
 
     private enum Format {
         PNG, JPEG_HIGH, JPEG_MEDIUM, JPEG_LOW;
@@ -206,7 +207,9 @@ public class ScreenshotController extends BorderPane {
         FXUtils.resetSpinnerNullToPrevious(spinnerScale);
 
         comboFormat.getItems().setAll(Format.values());
-        comboFormat.getSelectionModel().selectFirst();
+        if (!comboFormat.getItems().contains(formatProperty.get()))
+            formatProperty.setValue(Format.PNG);
+        comboFormat.valueProperty().bindBidirectional(formatProperty);
 
         labelCurrentWindow.textProperty().bind(focusedWindowName);
 
