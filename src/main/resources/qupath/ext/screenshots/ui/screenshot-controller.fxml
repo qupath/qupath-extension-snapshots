@@ -14,7 +14,19 @@
 
 <fx:root prefWidth="400.0" type="BorderPane" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
    <bottom>
-      <Button fx:id="btnCapture" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#captureSnapshot" text="Capture" BorderPane.alignment="CENTER" />
+      <GridPane BorderPane.alignment="CENTER">
+         <columnConstraints>
+            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" />
+            <ColumnConstraints hgrow="SOMETIMES" minWidth="10.0" prefWidth="100.0" />
+         </columnConstraints>
+         <rowConstraints>
+            <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
+         </rowConstraints>
+         <children>
+            <Button fx:id="btnSnapshot" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#captureSnapshot" text="Window snapshot" GridPane.hgrow="ALWAYS" />
+            <Button fx:id="btnScreenshot" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#captureScreenshot" text="Window screenshot" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" />
+         </children>
+      </GridPane>
    </bottom>
    <center>
       <GridPane hgap="5.0" vgap="5.0" BorderPane.alignment="CENTER">
@@ -29,6 +41,7 @@
           <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
             <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
             <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
         </rowConstraints>
          <children>
             <TextField id="tfDirectory" fx:id="tfDirectory" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" />
@@ -38,10 +51,12 @@
             <Button fx:id="btnDirectory" mnemonicParsing="false" onAction="#promptForDirectory" text="Choose" GridPane.columnIndex="2" />
             <Label text="Delay (s)" GridPane.rowIndex="4" />
             <Spinner id="spinnerDelay" fx:id="spinnerDelay" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="4" />
-            <CheckBox fx:id="cbUnique" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Make name unique (don't overwrite)" GridPane.columnSpan="2147483647" GridPane.rowIndex="2" />
+            <CheckBox fx:id="cbUniqueName" maxWidth="1.7976931348623157E308" mnemonicParsing="false" text="Make name unique (don't overwrite)" GridPane.columnSpan="2147483647" GridPane.rowIndex="2" />
             <Label id="labelDelay" GridPane.columnIndex="2" GridPane.rowIndex="2" />
-            <Label text="Label" GridPane.rowIndex="3" />
-            <ComboBox fx:id="comboWindow" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.columnSpan="2147483647" GridPane.hgrow="ALWAYS" GridPane.rowIndex="3" />
+            <Label text="Format" GridPane.rowIndex="3" />
+            <ComboBox fx:id="comboFormat" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.columnSpan="2147483647" GridPane.hgrow="ALWAYS" GridPane.rowIndex="3" />
+            <Label text="Current window" GridPane.rowIndex="5" />
+            <Label fx:id="labelCurrentWindow" maxWidth="1.7976931348623157E308" text="Label" GridPane.columnIndex="1" GridPane.columnSpan="2147483647" GridPane.rowIndex="5" />
          </children>
          <padding>
             <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />

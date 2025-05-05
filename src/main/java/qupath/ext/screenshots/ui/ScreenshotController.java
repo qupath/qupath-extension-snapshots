@@ -1,27 +1,43 @@
 package qupath.ext.screenshots.ui;
 
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ObservableValue;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.ContentDisplay;
+import javafx.scene.control.Label;
 import javafx.scene.control.Spinner;
+import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.TextField;
-import javafx.scene.input.Clipboard;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.VBox;
+import javafx.stage.Popup;
+import javafx.stage.Stage;
 import javafx.stage.Window;
+import org.controlsfx.glyphfont.FontAwesome;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import qupath.fx.dialogs.Dialogs;
 import qupath.fx.dialogs.FileChoosers;
+import qupath.fx.utils.FXUtils;
+import qupath.lib.awt.common.BufferedImageTools;
 import qupath.lib.common.GeneralTools;
+import qupath.lib.gui.tools.IconFactory;
 import qupath.lib.images.writers.ImageWriterTools;
 
+import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
-import javax.imageio.ImageWriter;
+import javax.imageio.ImageWriteParam;
+import java.awt.AWTException;
+import java.awt.Robot;
+import java.awt.geom.Rectangle2D;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.util.ResourceBundle;
@@ -37,6 +53,44 @@ public class ScreenshotController extends BorderPane {
 
     private static final ResourceBundle resources = ResourceBundle.getBundle("qupath.ext.screenshots.ui.strings");
 
+    private enum Format {
+        PNG, JPEG_HIGH, JPEG_MEDIUM, JPEG_LOW;
+
+        public String getFormatName() {
+            if (this == PNG)
+                return "PNG";
+            else
+                return "JPEG";
+        }
+
+        public String getExtension() {
+            if (this == PNG)
+                return ".png";
+            else
+                return ".jpg";
+        }
+
+        public float getJpegQuality() {
+            return switch(this) {
+                case JPEG_HIGH -> 0.9f;
+                case JPEG_MEDIUM -> 0.75f;
+                case JPEG_LOW -> 0.5f;
+                default -> -1f;
+            };
+        }
+
+        @Override
+        public String toString() {
+            return switch(this) {
+                case PNG -> "PNG";
+                case JPEG_HIGH -> "JPEG (high)";
+                case JPEG_MEDIUM -> "JPEG (medium)";
+                case JPEG_LOW -> "JPEG (low)";
+            };
+        }
+
+    }
+
     @FXML
     private TextField tfDirectory;
 
@@ -47,13 +101,34 @@ public class ScreenshotController extends BorderPane {
     private CheckBox cbUniqueName;
 
     @FXML
-    private ComboBox<String> comboWindow;
+    private ComboBox<Format> comboFormat;
 
     @FXML
     private Spinner<Integer> spinnerDelay;
 
     @FXML
-    private Button btnCapture;
+    private Button btnSnapshot;
+
+    @FXML
+    private Button btnScreenshot;
+
+    @FXML
+    private Button btnDirectory;
+
+    @FXML
+    private Label labelCurrentWindow;
+
+    private final ObjectProperty<Window> focusedWindow = new SimpleObjectProperty<>();
+
+    private final ObservableValue<String> focusedWindowName = focusedWindow.flatMap(ScreenshotController::getWindowName);
+
+    private static ObservableValue<String> getWindowName(Window window) {
+        if (window instanceof Stage) {
+            return ((Stage) window).titleProperty();
+        } else {
+            return Bindings.createStringBinding(window::toString);
+        }
+    }
 
     /**
      * Create a new instance of the interface controller.
@@ -82,9 +157,35 @@ public class ScreenshotController extends BorderPane {
     }
 
     private void init() {
-        btnCapture.disableProperty().bind(tfDirectory.textProperty().isEmpty()
+        btnScreenshot.disableProperty().bind(tfDirectory.textProperty().isEmpty()
                 .or(tfName.textProperty().isEmpty()));
+        btnSnapshot.disableProperty().bind(btnScreenshot.disableProperty());
+
+        // Listen to changes in the focused window, while ignoring this window
+        var listener = new WindowFocusListener(this::isFocusTrackedWindow);
+        focusedWindow.bind(listener.focusedWindow());
+        focusedWindow.addListener((v, o, n) -> System.err.println(n));
+
+        spinnerDelay.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 100, 0));
+        spinnerDelay.getValueFactory().setValue(0);
+        FXUtils.resetSpinnerNullToPrevious(spinnerDelay);
+
+        comboFormat.getItems().setAll(Format.values());
+        comboFormat.getSelectionModel().selectFirst();
+
+        labelCurrentWindow.textProperty().bind(focusedWindowName);
+
+        btnDirectory.setGraphic(IconFactory.createNode(FontAwesome.Glyph.FOLDER_OPEN_ALT));
+        btnDirectory.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
     }
+
+    private boolean isFocusTrackedWindow(Window window) {
+        if (window instanceof Popup)
+            return false;
+        var scene = getScene();
+        return window instanceof Stage && (scene == null || scene.getWindow() != window);
+    }
+
 
     @FXML
     private void promptForDirectory() {
@@ -103,30 +204,68 @@ public class ScreenshotController extends BorderPane {
         }
     }
 
-
     @FXML
     private void captureSnapshot() {
+        doCapture(false);
+    }
+
+    @FXML
+    private void captureScreenshot() {
+        doCapture(true);
+    }
+
+
+    private void doCapture(boolean doScreenshot) {
         var file = new File(tfDirectory.getText(), tfName.getText());
         Integer delay = spinnerDelay.getValue();
-        delay = 2;
         if (delay != null && delay > 0) {
             CompletableFuture.delayedExecutor(delay, TimeUnit.SECONDS, Platform::runLater)
-                    .execute(() -> snapshotFocusedWindow(file));
+                    .execute(() -> snapshotFocusedWindow(file, doScreenshot));
         } else {
-            snapshotFocusedWindow(file);
+            snapshotFocusedWindow(file, doScreenshot);
         }
     }
 
-    private void snapshotFocusedWindow(File file) {
-        var win = Window.getWindows().filtered(Window::isFocused).stream().findFirst().orElse(null);
+    private void snapshotFocusedWindow(File file, boolean doScreenshot) {
+        var win = focusedWindow.getValue();
         var currentWin = getScene().getWindow();
         if (win != null && win != currentWin) {
             double opacity = currentWin.getOpacity();
             try {
                 currentWin.setOpacity(0);
-                var image = win.getScene().snapshot(null);
-                var img = SwingFXUtils.fromFXImage(image, null);
-                ImageWriterTools.writeImage(img, file.getAbsolutePath());
+                BufferedImage img;
+                if (doScreenshot) {
+                    var rect = new Rectangle2D.Double(
+                            win.getX(),
+                            win.getY(),
+                            win.getWidth(),
+                            win.getHeight()
+                    );
+                    try {
+                        img = new Robot().createScreenCapture(rect.getBounds());
+                    } catch (AWTException e) {
+                        var image = new javafx.scene.robot.Robot().getScreenCapture(null,
+                                new javafx.geometry.Rectangle2D(rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight()));
+                        img = SwingFXUtils.fromFXImage(image, null);
+                    }
+                } else {
+                    var image = win.getScene().snapshot(null);
+                    img = SwingFXUtils.fromFXImage(image, null);
+                }
+
+                if (GeneralTools.getExtension(file).isPresent()) {
+                    file = confirmFile(file);
+                    ImageWriterTools.writeImage(img, file.getAbsolutePath());
+                } else {
+                    var format = comboFormat.getValue();
+                    var quality = format.getJpegQuality();
+                    file = new File(file.getParentFile(), file.getName() + format.getExtension());
+                    file = confirmFile(file);
+                    if (quality >= 0)
+                        writeJpegWithQuality(img, file, quality);
+                    else
+                        ImageIO.write(img, format.getFormatName(), file);
+                }
                 Dialogs.showInfoNotification("Screenshot", "Written to " + file.getAbsolutePath());
             } catch (IOException e) {
                 Dialogs.showErrorMessage("Screenshot error", "Unable to write to " + file.getAbsolutePath());
@@ -134,6 +273,33 @@ public class ScreenshotController extends BorderPane {
             } finally {
                 currentWin.setOpacity(opacity);
             }
+        }
+    }
+    
+    private File confirmFile(File file) {
+        if (!cbUniqueName.isSelected() || !file.exists())
+            return file;
+        var file2 = file;
+        int ind = 0;
+        var root = GeneralTools.getNameWithoutExtension(file);
+        var ext = GeneralTools.getExtension(file).orElse("");
+        while (file2.exists()) {
+            ind++;
+            file2 = new File(file.getParent(), root + "-" + ind + ext);
+        }
+        return file2;
+    }
+    
+
+    private void writeJpegWithQuality(BufferedImage img, File file, float quality) throws IOException {
+        var jpegWriter = ImageIO.getImageWritersByFormatName("jpeg").next();
+        var jpgWriteParam = jpegWriter.getDefaultWriteParam();
+        jpgWriteParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+        jpgWriteParam.setCompressionQuality(quality);
+        try (var stream = ImageIO.createImageOutputStream(file)) {
+            jpegWriter.setOutput(stream);
+            img = BufferedImageTools.ensureBufferedImageType(img, BufferedImage.TYPE_INT_RGB); // Can't have alpha
+            jpegWriter.write(null, new IIOImage(img, null, null), jpgWriteParam);
         }
     }
 
