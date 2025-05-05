@@ -1,22 +1,18 @@
 plugins {
-    // Support writing the extension in Groovy (remove this if you don't want to)
-    groovy
     // To optionally create a shadow/fat jar that bundle up any non-core dependencies
     id("com.gradleup.shadow") version "8.3.5"
     // QuPath Gradle extension convention plugin
     id("qupath-conventions")
 }
 
-// TODO: Configure your extension here (please change the defaults!)
 qupathExtension {
-    name = "qupath-extension-template"
+    name = "qupath-extension-screenshots"
     group = "io.github.qupath"
     version = "0.1.0-SNAPSHOT"
     description = "A simple QuPath extension"
-    automaticModule = "io.github.qupath.extension.template"
+    automaticModule = "io.github.qupath.extension.screenshots"
 }
 
-// TODO: Define your dependencies here
 dependencies {
 
     // Main dependencies for most QuPath extensions
