@@ -5,6 +5,7 @@
 <?import javafx.scene.control.CheckBox?>
 <?import javafx.scene.control.ComboBox?>
 <?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ProgressBar?>
 <?import javafx.scene.control.Spinner?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.BorderPane?>
@@ -23,8 +24,8 @@
             <RowConstraints minHeight="10.0" vgrow="SOMETIMES" />
          </rowConstraints>
          <children>
-            <Button fx:id="btnSnapshot" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#captureSnapshot" text="Window snapshot" GridPane.hgrow="ALWAYS" />
-            <Button fx:id="btnScreenshot" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#captureScreenshot" text="Window screenshot" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" />
+            <Button fx:id="btnSnapshot" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#captureSnapshot" text="Make snapshot" GridPane.hgrow="ALWAYS" />
+            <Button fx:id="btnScreenshot" maxWidth="1.7976931348623157E308" mnemonicParsing="false" onAction="#captureScreenshot" text="Make screenshot" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" />
          </children>
       </GridPane>
    </bottom>
@@ -44,6 +45,7 @@
             <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
             <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
             <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+            <RowConstraints vgrow="SOMETIMES" />
         </rowConstraints>
          <children>
             <TextField id="tfDirectory" fx:id="tfDirectory" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" />
@@ -62,6 +64,7 @@
             <CheckBox fx:id="cbCopyToClipboard" mnemonicParsing="false" text="Copy to clipboard (don't save image)" GridPane.columnSpan="2147483647" GridPane.rowIndex="3" />
             <Label text="Scale snapshot" GridPane.rowIndex="6" />
             <Spinner fx:id="spinnerScale" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.columnSpan="2147483647" GridPane.hgrow="ALWAYS" GridPane.rowIndex="6" />
+            <ProgressBar fx:id="progressDelay" maxHeight="12.0" maxWidth="1.7976931348623157E308" visible="false" GridPane.columnSpan="2147483647" GridPane.rowIndex="8" />
          </children>
          <padding>
             <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />

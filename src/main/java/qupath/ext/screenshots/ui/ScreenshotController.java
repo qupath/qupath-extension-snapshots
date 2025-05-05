@@ -2,8 +2,11 @@ package qupath.ext.screenshots.ui;
 
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.property.StringProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
@@ -14,7 +17,7 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
-import javafx.scene.control.ProgressIndicator;
+import javafx.scene.control.ProgressBar;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.TextField;
@@ -34,6 +37,7 @@ import qupath.fx.dialogs.FileChoosers;
 import qupath.fx.utils.FXUtils;
 import qupath.lib.awt.common.BufferedImageTools;
 import qupath.lib.common.GeneralTools;
+import qupath.lib.gui.prefs.PathPrefs;
 import qupath.lib.gui.tools.IconFactory;
 import qupath.lib.images.writers.ImageWriterTools;
 
@@ -59,6 +63,11 @@ public class ScreenshotController extends BorderPane {
     private static final Logger logger = LoggerFactory.getLogger(ScreenshotController.class);
 
     private static final ResourceBundle resources = ResourceBundle.getBundle("qupath.ext.screenshots.ui.strings");
+
+    private static final StringProperty pathProperty = PathPrefs.createPersistentPreference("ext.screenshots.path", "");
+    private static final StringProperty nameProperty = PathPrefs.createPersistentPreference("ext.screenshots.name", "");
+    private static final BooleanProperty copyProperty = PathPrefs.createPersistentPreference("ext.screenshots.copyToClipboard", false);
+    private static final BooleanProperty uniqueNamesProperty = PathPrefs.createPersistentPreference("ext.screenshots.uniqueNames", true);
 
     private enum Format {
         PNG, JPEG_HIGH, JPEG_MEDIUM, JPEG_LOW;
@@ -131,6 +140,11 @@ public class ScreenshotController extends BorderPane {
     @FXML
     private Label labelCurrentWindow;
 
+    @FXML
+    private ProgressBar progressDelay;
+
+    private BooleanProperty processing = new SimpleBooleanProperty(false);
+
     private final ObjectProperty<Window> focusedWindow = new SimpleObjectProperty<>();
 
     private final ObservableValue<String> focusedWindowName = focusedWindow.flatMap(ScreenshotController::getWindowName);
@@ -163,11 +177,21 @@ public class ScreenshotController extends BorderPane {
 
     private void init() {
         btnScreenshot.disableProperty().bind(
-                cbCopyToClipboard.selectedProperty().not().and(
-                        tfDirectory.textProperty().isEmpty()
-                                .or(tfName.textProperty().isEmpty())
+                processing.or(
+                    cbCopyToClipboard.selectedProperty().not().and(
+                            tfDirectory.textProperty().isEmpty()
+                                    .or(tfName.textProperty().isEmpty())
+                    )
                 ));
         btnSnapshot.disableProperty().bind(btnScreenshot.disableProperty());
+
+        tfDirectory.textProperty().bindBidirectional(pathProperty);
+        tfDirectory.disableProperty().bind(cbCopyToClipboard.selectedProperty());
+        tfName.textProperty().bindBidirectional(nameProperty);
+        tfName.disableProperty().bind(cbCopyToClipboard.selectedProperty());
+
+        cbCopyToClipboard.selectedProperty().bindBidirectional(copyProperty);
+        cbUniqueName.selectedProperty().bindBidirectional(uniqueNamesProperty);
 
         // Listen to changes in the focused window, while ignoring this window
         var listener = new WindowFocusListener(this::isFocusTrackedWindow);
@@ -189,8 +213,25 @@ public class ScreenshotController extends BorderPane {
         btnDirectory.setGraphic(IconFactory.createNode(FontAwesome.Glyph.FOLDER_OPEN_ALT, 12));
         btnDirectory.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
 
-        btnScreenshot.setGraphic(IconFactory.createFontAwesome('\uf2d2'));
         btnSnapshot.setGraphic(IconFactory.createNode(FontAwesome.Glyph.PICTURE_ALT));
+        btnSnapshot.textProperty().bind(Bindings.createStringBinding(() -> {
+            if (cbCopyToClipboard.isSelected())
+                return "Copy snapshot";
+            else
+                return "Save snapshot";
+        }, cbCopyToClipboard.selectedProperty()));
+
+        btnScreenshot.setGraphic(IconFactory.createNode(FontAwesome.Glyph.CAMERA));
+        btnScreenshot.setContentDisplay(ContentDisplay.RIGHT);
+        btnScreenshot.textProperty().bind(Bindings.createStringBinding(() -> {
+            if (cbCopyToClipboard.isSelected())
+                return "Copy screenshot";
+            else
+                return "Save screenshot";
+        }, cbCopyToClipboard.selectedProperty()));
+
+        progressDelay.visibleProperty().bind(processing);
+        progressDelay.setProgress(ProgressBar.INDETERMINATE_PROGRESS);
     }
 
     private boolean isFocusTrackedWindow(Window window) {
@@ -233,8 +274,16 @@ public class ScreenshotController extends BorderPane {
         var file = cbCopyToClipboard.isSelected() ? null : new File(tfDirectory.getText(), tfName.getText());
         Integer delay = spinnerDelay.getValue();
         if (delay != null && delay > 0) {
+            // Ideally we'd show progress... this is the lazy way
+            processing.set(true);
+            var window = getScene().getWindow();
+            window.setOpacity(0.0);
             CompletableFuture.delayedExecutor(delay, TimeUnit.SECONDS, Platform::runLater)
-                    .execute(() -> snapshotFocusedWindow(file, doScreenshot));
+                    .execute(() -> {
+                        snapshotFocusedWindow(file, doScreenshot);
+                        processing.set(false);
+                        window.setOpacity(1.0);
+                    });
         } else {
             snapshotFocusedWindow(file, doScreenshot);
         }
@@ -244,9 +293,7 @@ public class ScreenshotController extends BorderPane {
         var win = focusedWindow.getValue();
         var currentWin = getScene().getWindow();
         if (win != null && win != currentWin) {
-            double opacity = currentWin.getOpacity();
             try {
-                currentWin.setOpacity(0);
                 BufferedImage img;
                 Image image;
                 if (doScreenshot) {
@@ -298,8 +345,6 @@ public class ScreenshotController extends BorderPane {
             } catch (IOException e) {
                 Dialogs.showErrorMessage("Screenshot error", "Unable to write to " + file.getAbsolutePath());
                 logger.error(e.getMessage(), e);
-            } finally {
-                currentWin.setOpacity(opacity);
             }
         }
     }

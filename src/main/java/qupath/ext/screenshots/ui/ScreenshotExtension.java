@@ -54,7 +54,7 @@ public class ScreenshotExtension implements QuPathExtension, GitHubProject {
 	 * @param qupath The QuPath GUI
 	 */
 	private void addMenuItem(QuPathGUI qupath) {
-		var menu = qupath.getMenu("Extensions>" + EXTENSION_NAME, true);
+		var menu = qupath.getMenu("Extensions", true);
 		MenuItem menuItem = new MenuItem("Screenshot window");
 		menuItem.setOnAction(e -> createStage());
 		menu.getItems().add(menuItem);
