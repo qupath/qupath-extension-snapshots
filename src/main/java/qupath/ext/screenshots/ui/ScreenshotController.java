@@ -8,15 +8,21 @@ import javafx.beans.value.ObservableValue;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
+import javafx.scene.SnapshotParameters;
 import javafx.scene.control.Button;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.Label;
+import javafx.scene.control.ProgressIndicator;
 import javafx.scene.control.Spinner;
 import javafx.scene.control.SpinnerValueFactory;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.DataFormat;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.transform.Scale;
 import javafx.stage.Popup;
 import javafx.stage.Stage;
 import javafx.stage.Window;
@@ -40,6 +46,7 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -101,10 +108,16 @@ public class ScreenshotController extends BorderPane {
     private CheckBox cbUniqueName;
 
     @FXML
+    private CheckBox cbCopyToClipboard;
+
+    @FXML
     private ComboBox<Format> comboFormat;
 
     @FXML
     private Spinner<Integer> spinnerDelay;
+
+    @FXML
+    private Spinner<Double> spinnerScale;
 
     @FXML
     private Button btnSnapshot;
@@ -131,22 +144,14 @@ public class ScreenshotController extends BorderPane {
     }
 
     /**
-     * Create a new instance of the interface controller.
-     * @return a new instance of the interface controller
+     * Create a new instance of the screenshot controller.
+     * @return a new instance of the controller
      * @throws IOException If reading the extension FXML files fails.
      */
     public static ScreenshotController createInstance() throws IOException {
         return new ScreenshotController();
     }
 
-    /**
-     * This method reads an FXML file. These are markup files containing the structure of a UI element.
-     * <p>
-     * Fields in this class tagged with <code>@FXML</code> correspond to UI elements, and methods tagged with <code>@FXML</code> are methods triggered by actions on the UI (e.g., mouse clicks).
-     * <p>
-     * We consider the use of FXML to be "best practice" for UI creation, as it separates logic from layout and enables easier use of CSS. However, it is not mandatory, and you could instead define the layout of the UI using code.
-     * @throws IOException If the FXML can't be read successfully.
-     */
     private ScreenshotController() throws IOException {
         var url = ScreenshotController.class.getResource("screenshot-controller.fxml");
         FXMLLoader loader = new FXMLLoader(url, resources);
@@ -157,26 +162,35 @@ public class ScreenshotController extends BorderPane {
     }
 
     private void init() {
-        btnScreenshot.disableProperty().bind(tfDirectory.textProperty().isEmpty()
-                .or(tfName.textProperty().isEmpty()));
+        btnScreenshot.disableProperty().bind(
+                cbCopyToClipboard.selectedProperty().not().and(
+                        tfDirectory.textProperty().isEmpty()
+                                .or(tfName.textProperty().isEmpty())
+                ));
         btnSnapshot.disableProperty().bind(btnScreenshot.disableProperty());
 
         // Listen to changes in the focused window, while ignoring this window
         var listener = new WindowFocusListener(this::isFocusTrackedWindow);
         focusedWindow.bind(listener.focusedWindow());
-        focusedWindow.addListener((v, o, n) -> System.err.println(n));
 
         spinnerDelay.setValueFactory(new SpinnerValueFactory.IntegerSpinnerValueFactory(0, 100, 0));
         spinnerDelay.getValueFactory().setValue(0);
         FXUtils.resetSpinnerNullToPrevious(spinnerDelay);
+
+        spinnerScale.setValueFactory(new SpinnerValueFactory.DoubleSpinnerValueFactory(0.25, 16, 1.0));
+        spinnerScale.getValueFactory().setValue(1.0);
+        FXUtils.resetSpinnerNullToPrevious(spinnerScale);
 
         comboFormat.getItems().setAll(Format.values());
         comboFormat.getSelectionModel().selectFirst();
 
         labelCurrentWindow.textProperty().bind(focusedWindowName);
 
-        btnDirectory.setGraphic(IconFactory.createNode(FontAwesome.Glyph.FOLDER_OPEN_ALT));
+        btnDirectory.setGraphic(IconFactory.createNode(FontAwesome.Glyph.FOLDER_OPEN_ALT, 12));
         btnDirectory.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
+
+        btnScreenshot.setGraphic(IconFactory.createFontAwesome('\uf2d2'));
+        btnSnapshot.setGraphic(IconFactory.createNode(FontAwesome.Glyph.PICTURE_ALT));
     }
 
     private boolean isFocusTrackedWindow(Window window) {
@@ -216,7 +230,7 @@ public class ScreenshotController extends BorderPane {
 
 
     private void doCapture(boolean doScreenshot) {
-        var file = new File(tfDirectory.getText(), tfName.getText());
+        var file = cbCopyToClipboard.isSelected() ? null : new File(tfDirectory.getText(), tfName.getText());
         Integer delay = spinnerDelay.getValue();
         if (delay != null && delay > 0) {
             CompletableFuture.delayedExecutor(delay, TimeUnit.SECONDS, Platform::runLater)
@@ -234,6 +248,7 @@ public class ScreenshotController extends BorderPane {
             try {
                 currentWin.setOpacity(0);
                 BufferedImage img;
+                Image image;
                 if (doScreenshot) {
                     var rect = new Rectangle2D.Double(
                             win.getX(),
@@ -243,14 +258,27 @@ public class ScreenshotController extends BorderPane {
                     );
                     try {
                         img = new Robot().createScreenCapture(rect.getBounds());
+                        image = SwingFXUtils.toFXImage(img, null);
                     } catch (AWTException e) {
-                        var image = new javafx.scene.robot.Robot().getScreenCapture(null,
+                        image = new javafx.scene.robot.Robot().getScreenCapture(null,
                                 new javafx.geometry.Rectangle2D(rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight()));
                         img = SwingFXUtils.fromFXImage(image, null);
                     }
                 } else {
-                    var image = win.getScene().snapshot(null);
+                    double scale = spinnerScale.getValue() == null ? 1 : spinnerScale.getValue();
+                    if (scale == 1.0 || scale <= 0.0)
+                        image = win.getScene().snapshot(null);
+                    else {
+                        var node = win.getScene().getRoot();
+                        var params = new SnapshotParameters();
+                        params.setTransform(new Scale(scale, scale));
+                        image = node.snapshot(params, null);
+                    }
                     img = SwingFXUtils.fromFXImage(image, null);
+                }
+                if (file == null) {
+                    Clipboard.getSystemClipboard().setContent(Map.of(DataFormat.IMAGE, image));
+                    return;
                 }
 
                 if (GeneralTools.getExtension(file).isPresent()) {
@@ -275,7 +303,12 @@ public class ScreenshotController extends BorderPane {
             }
         }
     }
-    
+
+    /**
+     * Ensure a file is unique, if necessary.
+     * @param file the input file
+     * @return the input file, or a unique file with a related name in the same directory
+     */
     private File confirmFile(File file) {
         if (!cbUniqueName.isSelected() || !file.exists())
             return file;
