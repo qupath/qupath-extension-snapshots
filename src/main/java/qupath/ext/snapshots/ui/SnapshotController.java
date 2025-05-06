@@ -66,7 +66,7 @@ public class SnapshotController extends BorderPane {
 
     private static final StringProperty pathProperty = PathPrefs.createPersistentPreference("ext.snapshots.path", "");
     private static final StringProperty nameProperty = PathPrefs.createPersistentPreference("ext.snapshots.name", "");
-    private static final BooleanProperty copyProperty = PathPrefs.createPersistentPreference("ext.snapshots.copyToClipboard", false);
+    private static final BooleanProperty copyProperty = PathPrefs.createPersistentPreference("ext.snapshots.copyToClipboard", true);
     private static final BooleanProperty uniqueNamesProperty = PathPrefs.createPersistentPreference("ext.snapshots.uniqueNames", true);
     private static final ObjectProperty<Format> formatProperty = PathPrefs.createPersistentPreference("ext.snapshots.format", Format.PNG, Format.class);
 
@@ -185,6 +185,8 @@ public class SnapshotController extends BorderPane {
                     )
                 ));
         btnSnapshot.disableProperty().bind(btnScreenshot.disableProperty());
+        comboFormat.disableProperty().bind(btnScreenshot.disableProperty());
+        cbUniqueName.disableProperty().bind(btnScreenshot.disableProperty());
 
         tfDirectory.textProperty().bindBidirectional(pathProperty);
         tfDirectory.disableProperty().bind(cbCopyToClipboard.selectedProperty());
