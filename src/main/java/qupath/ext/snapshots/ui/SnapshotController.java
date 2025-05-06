@@ -1,4 +1,4 @@
-package qupath.ext.screenshots.ui;
+package qupath.ext.snapshots.ui;
 
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -56,19 +56,19 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Controller for UI pane contained in screenshot-controller.fxml
+ * Controller for UI pane contained in snapshot-controller.fxml
  */
-public class ScreenshotController extends BorderPane {
+public class SnapshotController extends BorderPane {
 
-    private static final Logger logger = LoggerFactory.getLogger(ScreenshotController.class);
+    private static final Logger logger = LoggerFactory.getLogger(SnapshotController.class);
 
-    private static final ResourceBundle resources = ResourceBundle.getBundle("qupath.ext.screenshots.ui.strings");
+    private static final ResourceBundle resources = ResourceBundle.getBundle("qupath.ext.snapshots.ui.strings");
 
-    private static final StringProperty pathProperty = PathPrefs.createPersistentPreference("ext.screenshots.path", "");
-    private static final StringProperty nameProperty = PathPrefs.createPersistentPreference("ext.screenshots.name", "");
-    private static final BooleanProperty copyProperty = PathPrefs.createPersistentPreference("ext.screenshots.copyToClipboard", false);
-    private static final BooleanProperty uniqueNamesProperty = PathPrefs.createPersistentPreference("ext.screenshots.uniqueNames", true);
-    private static final ObjectProperty<Format> formatProperty = PathPrefs.createPersistentPreference("ext.screenshots.format", Format.PNG, Format.class);
+    private static final StringProperty pathProperty = PathPrefs.createPersistentPreference("ext.snapshots.path", "");
+    private static final StringProperty nameProperty = PathPrefs.createPersistentPreference("ext.snapshots.name", "");
+    private static final BooleanProperty copyProperty = PathPrefs.createPersistentPreference("ext.snapshots.copyToClipboard", false);
+    private static final BooleanProperty uniqueNamesProperty = PathPrefs.createPersistentPreference("ext.snapshots.uniqueNames", true);
+    private static final ObjectProperty<Format> formatProperty = PathPrefs.createPersistentPreference("ext.snapshots.format", Format.PNG, Format.class);
 
     private enum Format {
         PNG, JPEG_HIGH, JPEG_MEDIUM, JPEG_LOW;
@@ -148,7 +148,7 @@ public class ScreenshotController extends BorderPane {
 
     private final ObjectProperty<Window> focusedWindow = new SimpleObjectProperty<>();
 
-    private final ObservableValue<String> focusedWindowName = focusedWindow.flatMap(ScreenshotController::getWindowName);
+    private final ObservableValue<String> focusedWindowName = focusedWindow.flatMap(SnapshotController::getWindowName);
 
     private static ObservableValue<String> getWindowName(Window window) {
         if (window instanceof Stage) {
@@ -163,12 +163,12 @@ public class ScreenshotController extends BorderPane {
      * @return a new instance of the controller
      * @throws IOException If reading the extension FXML files fails.
      */
-    public static ScreenshotController createInstance() throws IOException {
-        return new ScreenshotController();
+    public static SnapshotController createInstance() throws IOException {
+        return new SnapshotController();
     }
 
-    private ScreenshotController() throws IOException {
-        var url = ScreenshotController.class.getResource("screenshot-controller.fxml");
+    private SnapshotController() throws IOException {
+        var url = SnapshotController.class.getResource("snapshot-controller.fxml");
         FXMLLoader loader = new FXMLLoader(url, resources);
         loader.setRoot(this);
         loader.setController(this);
@@ -219,18 +219,18 @@ public class ScreenshotController extends BorderPane {
         btnSnapshot.setGraphic(IconFactory.createNode(FontAwesome.Glyph.PICTURE_ALT));
         btnSnapshot.textProperty().bind(Bindings.createStringBinding(() -> {
             if (cbCopyToClipboard.isSelected())
-                return "Copy snapshot";
+                return resources.getString("button.snapshot.copy");
             else
-                return "Save snapshot";
+                return resources.getString("button.snapshot.save");
         }, cbCopyToClipboard.selectedProperty()));
 
         btnScreenshot.setGraphic(IconFactory.createNode(FontAwesome.Glyph.CAMERA));
         btnScreenshot.setContentDisplay(ContentDisplay.RIGHT);
         btnScreenshot.textProperty().bind(Bindings.createStringBinding(() -> {
             if (cbCopyToClipboard.isSelected())
-                return "Copy screenshot";
+                return resources.getString("button.screenshot.copy");
             else
-                return "Save screenshot";
+                return resources.getString("button.screenshot.save");
         }, cbCopyToClipboard.selectedProperty()));
 
         progressDelay.visibleProperty().bind(processing);
@@ -377,6 +377,9 @@ public class ScreenshotController extends BorderPane {
         var jpgWriteParam = jpegWriter.getDefaultWriteParam();
         jpgWriteParam.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
         jpgWriteParam.setCompressionQuality(quality);
+        // Need to delete existing file
+        if (file.exists() && file.isFile())
+            file.delete();
         try (var stream = ImageIO.createImageOutputStream(file)) {
             jpegWriter.setOutput(stream);
             img = BufferedImageTools.ensureBufferedImageType(img, BufferedImage.TYPE_INT_RGB); // Can't have alpha

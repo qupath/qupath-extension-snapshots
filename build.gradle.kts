@@ -6,11 +6,11 @@ plugins {
 }
 
 qupathExtension {
-    name = "qupath-extension-screenshots"
+    name = "qupath-extension-snapshots"
     group = "io.github.qupath"
     version = "0.1.0-SNAPSHOT"
-    description = "A simple QuPath extension"
-    automaticModule = "io.github.qupath.extension.screenshots"
+    description = "A QuPath extension to create snapshots & screenshots"
+    automaticModule = "io.github.qupath.extension.snapshots"
 }
 
 dependencies {
@@ -19,9 +19,6 @@ dependencies {
     shadow(libs.bundles.qupath)
     shadow(libs.bundles.logging)
     shadow(libs.qupath.fxtras)
-
-    // If you aren't using Groovy, this can be removed
-    shadow(libs.bundles.groovy)
 
     // For testing
     testImplementation(libs.bundles.qupath)

@@ -1,4 +1,4 @@
-package qupath.ext.screenshots.ui;
+package qupath.ext.snapshots.ui;
 
 import javafx.scene.Scene;
 import javafx.scene.control.MenuItem;
@@ -15,12 +15,14 @@ import java.io.IOException;
 import java.util.ResourceBundle;
 
 
+/**
+ * QuPath extension to help capture snapshots and screenshots.
+ */
+public class SnapshotExtension implements QuPathExtension, GitHubProject {
 
-public class ScreenshotExtension implements QuPathExtension, GitHubProject {
+	private static final Logger logger = LoggerFactory.getLogger(SnapshotExtension.class);
 
-	private static final Logger logger = LoggerFactory.getLogger(ScreenshotExtension.class);
-
-	private static final ResourceBundle resources = ResourceBundle.getBundle("qupath.ext.screenshots.ui.strings");
+	private static final ResourceBundle resources = ResourceBundle.getBundle("qupath.ext.snapshots.ui.strings");
 
 	private static final String EXTENSION_NAME = resources.getString("name");
 
@@ -67,7 +69,7 @@ public class ScreenshotExtension implements QuPathExtension, GitHubProject {
 		if (stage == null) {
 			try {
 				stage = new Stage();
-				Scene scene = new Scene(ScreenshotController.createInstance());
+				Scene scene = new Scene(SnapshotController.createInstance());
 				stage.initOwner(QuPathGUI.getInstance().getStage());
 				stage.setTitle(resources.getString("stage.title"));
 				stage.setScene(scene);

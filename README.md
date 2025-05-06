@@ -1,3 +1,3 @@
-# QuPath extension screenshots
+# QuPath snapshot extension
 
-QuPath extension for generating screenshots more easily.
+QuPath extension for generating snapshots & screenshots more easily.

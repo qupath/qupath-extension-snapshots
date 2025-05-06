@@ -1,4 +1,4 @@
-package qupath.ext.screenshots.ui;
+package qupath.ext.snapshots.ui;
 
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
