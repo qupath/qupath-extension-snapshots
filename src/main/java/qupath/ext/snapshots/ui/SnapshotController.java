@@ -13,6 +13,7 @@ import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.SnapshotParameters;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.CheckBox;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.ContentDisplay;
@@ -26,7 +27,7 @@ import javafx.scene.input.Clipboard;
 import javafx.scene.input.DataFormat;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.transform.Scale;
-import javafx.stage.Popup;
+import javafx.stage.PopupWindow;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import org.controlsfx.glyphfont.FontAwesome;
@@ -37,9 +38,11 @@ import qupath.fx.dialogs.FileChoosers;
 import qupath.fx.utils.FXUtils;
 import qupath.lib.awt.common.BufferedImageTools;
 import qupath.lib.common.GeneralTools;
+import qupath.lib.gui.dialogs.ParameterPanelFX;
 import qupath.lib.gui.prefs.PathPrefs;
 import qupath.lib.gui.tools.IconFactory;
 import qupath.lib.images.writers.ImageWriterTools;
+import qupath.lib.plugins.parameters.ParameterList;
 
 import javax.imageio.IIOImage;
 import javax.imageio.ImageIO;
@@ -139,6 +142,9 @@ public class SnapshotController extends BorderPane {
     private Button btnDirectory;
 
     @FXML
+    private Button btnSize;
+
+    @FXML
     private Label labelCurrentWindow;
 
     @FXML
@@ -218,6 +224,14 @@ public class SnapshotController extends BorderPane {
         btnDirectory.setGraphic(IconFactory.createNode(FontAwesome.Glyph.FOLDER_OPEN_ALT, 12));
         btnDirectory.setContentDisplay(ContentDisplay.GRAPHIC_ONLY);
 
+        btnSize.disableProperty().bind(Bindings.createBooleanBinding(() -> {
+            var win = focusedWindow.getValue();
+            if (win instanceof Stage stage)
+                return !stage.isResizable();
+            else
+                return true;
+        }, focusedWindow));
+
         btnSnapshot.setGraphic(IconFactory.createNode(FontAwesome.Glyph.PICTURE_ALT));
         btnSnapshot.textProperty().bind(Bindings.createStringBinding(() -> {
             if (cbCopyToClipboard.isSelected())
@@ -239,11 +253,18 @@ public class SnapshotController extends BorderPane {
         progressDelay.setProgress(ProgressBar.INDETERMINATE_PROGRESS);
     }
 
+    // We only want to track stages, but not our window (or windows we own)
     private boolean isFocusTrackedWindow(Window window) {
-        if (window instanceof Popup)
+        if (window instanceof PopupWindow)
             return false;
         var scene = getScene();
-        return window instanceof Stage && (scene == null || scene.getWindow() != window);
+        if (scene != null) {
+            var currentWindow = scene.getWindow();
+            if (window instanceof Stage stage) {
+                return window != currentWindow && stage.getOwner() != currentWindow;
+            }
+        }
+        return window instanceof Stage;
     }
 
 
@@ -261,6 +282,29 @@ public class SnapshotController extends BorderPane {
         );
         if (dir != null) {
             tfDirectory.setText(dir.toString());
+        }
+    }
+
+    @FXML
+    private void promptToSetSize() {
+        var win = focusedWindow.getValue();
+        if (win instanceof Stage stage) {
+            var params = new ParameterList()
+                    .addDoubleParameter("width", resources.getString("width"), stage.getWidth(), "px", resources.getString("width.description"))
+                    .addDoubleParameter("height", resources.getString("height"), stage.getHeight(), "px", resources.getString("height.description"));
+            var pane = new ParameterPanelFX(params).getPane();
+            if (Dialogs.builder()
+                    .title(resources.getString("size.label"))
+                    .owner(getScene().getWindow())
+                    .content(pane)
+                    .buttons(ButtonType.APPLY, ButtonType.CANCEL)
+                    .showAndWait()
+                    .orElse(ButtonType.CANCEL) == ButtonType.APPLY) {
+                double width = GeneralTools.clipValue(params.getDoubleParameterValue("width"), 1, 20_000);
+                double height = GeneralTools.clipValue(params.getDoubleParameterValue("height"), 1, 20_000);
+                stage.setWidth(width);
+                stage.setHeight(height);
+            }
         }
     }
 

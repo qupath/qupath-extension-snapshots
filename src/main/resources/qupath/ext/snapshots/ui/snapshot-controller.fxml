@@ -49,20 +49,28 @@
             <RowConstraints vgrow="SOMETIMES" />
         </rowConstraints>
          <children>
-            <TextField id="tfDirectory" fx:id="tfDirectory" maxWidth="1.7976931348623157E308" promptText="%directory.prompt" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS">
-               <tooltip>
-                  <Tooltip text="%directory.description" />
-               </tooltip></TextField>
+            <BorderPane GridPane.columnIndex="1" GridPane.columnSpan="2147483647" GridPane.hgrow="ALWAYS">
+               <center>
+                  <TextField id="tfDirectory" fx:id="tfDirectory" maxWidth="1.7976931348623157E308" promptText="%directory.prompt">
+                     <tooltip>
+                        <Tooltip text="%directory.description" />
+                     </tooltip>
+                  </TextField>
+               </center>
+               <right>
+                  <Button fx:id="btnDirectory" mnemonicParsing="false" onAction="#promptForDirectory" text="Choose" BorderPane.alignment="CENTER">
+                     <tooltip>
+                        <Tooltip text="%directory.description" />
+                     </tooltip>
+                  </Button>
+               </right>
+            </BorderPane>
             <TextField id="tfName" fx:id="tfName" maxWidth="1.7976931348623157E308" promptText="%name.prompt" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1">
                <tooltip>
                   <Tooltip text="%name.description" />
                </tooltip></TextField>
             <Label text="%directory.label" />
             <Label text="%name.label" GridPane.rowIndex="1" />
-            <Button fx:id="btnDirectory" mnemonicParsing="false" onAction="#promptForDirectory" text="Choose" GridPane.columnIndex="2">
-               <tooltip>
-                  <Tooltip text="%directory.description" />
-               </tooltip></Button>
             <Label text="%delay.label" GridPane.rowIndex="5" />
             <Spinner id="spinnerDelay" fx:id="spinnerDelay" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.columnSpan="2147483647" GridPane.hgrow="ALWAYS" GridPane.rowIndex="5">
                <tooltip>
@@ -79,7 +87,7 @@
                   <Tooltip text="%format.description" />
                </tooltip></ComboBox>
             <Label text="%window.label" GridPane.rowIndex="7" />
-            <Label fx:id="labelCurrentWindow" maxWidth="1.7976931348623157E308" style="-fx-font-weight: bold;" text="Label" GridPane.columnIndex="1" GridPane.columnSpan="2147483647" GridPane.rowIndex="7">
+            <Label fx:id="labelCurrentWindow" maxWidth="1.7976931348623157E308" style="-fx-font-weight: bold;" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="7">
                <tooltip>
                   <Tooltip text="%window.description" />
                </tooltip></Label>
@@ -93,6 +101,11 @@
                   <Tooltip text="%scale.description" />
                </tooltip></Spinner>
             <ProgressBar fx:id="progressDelay" maxHeight="12.0" maxWidth="1.7976931348623157E308" visible="false" GridPane.columnSpan="2147483647" GridPane.rowIndex="8" />
+            <Button fx:id="btnSize" mnemonicParsing="false" onAction="#promptToSetSize" text="%size.label" GridPane.columnIndex="2" GridPane.rowIndex="7">
+               <tooltip>
+                  <Tooltip text="%size.description" />
+               </tooltip>
+            </Button>
          </children>
          <padding>
             <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />

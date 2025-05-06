@@ -57,7 +57,7 @@ public class SnapshotExtension implements QuPathExtension, GitHubProject {
 	 */
 	private void addMenuItem(QuPathGUI qupath) {
 		var menu = qupath.getMenu("Extensions", true);
-		MenuItem menuItem = new MenuItem("Screenshot window");
+		MenuItem menuItem = new MenuItem(resources.getString("stage.title"));
 		menuItem.setOnAction(e -> createStage());
 		menu.getItems().add(menuItem);
 	}
