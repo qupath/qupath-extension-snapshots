@@ -343,8 +343,10 @@ public class SnapshotController extends BorderPane {
         var currentWin = getScene().getWindow();
         if (win != null && win != currentWin) {
             try {
-                BufferedImage img;
-                Image image;
+                // We need JavaFX image for clipboard or BufferedImage for saving
+                // For simplicity, just generate both for now
+                BufferedImage img = null;
+                Image image = null;
                 if (doScreenshot) {
                     var rect = new Rectangle2D.Double(
                             win.getX(),
@@ -352,10 +354,17 @@ public class SnapshotController extends BorderPane {
                             win.getWidth(),
                             win.getHeight()
                     );
-                    try {
-                        img = new Robot().createScreenCapture(rect.getBounds());
-                        image = SwingFXUtils.toFXImage(img, null);
-                    } catch (AWTException e) {
+                    // Need to use AWT Robot for correct colors on Mac
+                    if (GeneralTools.isMac()) {
+                        try {
+                            img = new Robot().createScreenCapture(rect.getBounds());
+                            image = SwingFXUtils.toFXImage(img, null);
+                        } catch (AWTException e) {
+                            logger.warn("Unable to capture screenshot using AWT - falling back to JavaFX (colors may differ)", e);
+                        }
+                    }
+                    // Need to use JavaFX Robot for Windows & Linux
+                    if (image == null) {
                         image = new javafx.scene.robot.Robot().getScreenCapture(null,
                                 new javafx.geometry.Rectangle2D(rect.getX(), rect.getY(), rect.getWidth(), rect.getHeight()));
                         img = SwingFXUtils.fromFXImage(image, null);
