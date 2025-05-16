@@ -53,6 +53,7 @@ import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.concurrent.CompletableFuture;
@@ -150,7 +151,7 @@ public class SnapshotController extends BorderPane {
     @FXML
     private ProgressBar progressDelay;
 
-    private BooleanProperty processing = new SimpleBooleanProperty(false);
+    private final BooleanProperty processing = new SimpleBooleanProperty(false);
 
     private final ObjectProperty<Window> focusedWindow = new SimpleObjectProperty<>();
 
@@ -277,7 +278,7 @@ public class SnapshotController extends BorderPane {
         }
         var dir = FileChoosers.promptForDirectory(
                 getScene().getWindow(),
-                "Choose directory",
+                resources.getString("directory.choose"),
                 dirCurrent
         );
         if (dir != null) {
@@ -399,10 +400,16 @@ public class SnapshotController extends BorderPane {
                     else
                         ImageIO.write(img, format.getFormatName(), file);
                 }
-                Dialogs.showInfoNotification("Screenshot", "Written to " + file.getAbsolutePath());
+                Dialogs.showInfoNotification(
+                        resources.getString("screenshot"),
+                        MessageFormat.format(resources.getString("screenshot.writtenTo"), file.getAbsolutePath())
+                );
             } catch (IOException e) {
-                Dialogs.showErrorMessage("Screenshot error", "Unable to write to " + file.getAbsolutePath());
-                logger.error(e.getMessage(), e);
+                Dialogs.showErrorMessage(
+                        resources.getString("screenshot.error"),
+                        MessageFormat.format(resources.getString("screenshot.unableToWrite"), file.getAbsolutePath())
+                );
+                logger.error("Unable to take screenshot of current window", e);
             }
         }
     }
