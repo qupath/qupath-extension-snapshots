@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 import qupath.fx.dialogs.Dialogs;
 import qupath.lib.common.Version;
 import qupath.lib.gui.QuPathGUI;
-import qupath.lib.gui.extensions.GitHubProject;
 import qupath.lib.gui.extensions.QuPathExtension;
 
 import java.io.IOException;
@@ -18,7 +17,7 @@ import java.util.ResourceBundle;
 /**
  * QuPath extension to help capture snapshots and screenshots.
  */
-public class SnapshotExtension implements QuPathExtension, GitHubProject {
+public class SnapshotExtension implements QuPathExtension {
 
 	private static final Logger logger = LoggerFactory.getLogger(SnapshotExtension.class);
 
@@ -29,9 +28,6 @@ public class SnapshotExtension implements QuPathExtension, GitHubProject {
 	private static final String EXTENSION_DESCRIPTION = resources.getString("description");
 
 	private static final Version EXTENSION_QUPATH_VERSION = Version.parse("v0.6.0-SNAPSHOT");
-
-	private static final GitHubRepo EXTENSION_REPOSITORY = GitHubRepo.create(
-			EXTENSION_NAME, "qupath", "qupath-extension-screenshots");
 
 	private boolean isInstalled = false;
 
@@ -96,10 +92,5 @@ public class SnapshotExtension implements QuPathExtension, GitHubProject {
 	@Override
 	public Version getQuPathVersion() {
 		return EXTENSION_QUPATH_VERSION;
-	}
-
-	@Override
-	public GitHubRepo getRepository() {
-		return EXTENSION_REPOSITORY;
 	}
 }
