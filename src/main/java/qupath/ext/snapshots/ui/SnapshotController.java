@@ -328,9 +328,10 @@ public class SnapshotController extends BorderPane {
             processing.set(true);
             var window = getScene().getWindow();
             window.setOpacity(0.0);
+            var winToSnapshot = focusedWindow.getValue();
             CompletableFuture.delayedExecutor(delay, TimeUnit.SECONDS, Platform::runLater)
                     .execute(() -> {
-                        snapshotFocusedWindow(file, doScreenshot);
+                        snapshotWindow(winToSnapshot, file, doScreenshot);
                         processing.set(false);
                         window.setOpacity(1.0);
                     });
@@ -341,6 +342,10 @@ public class SnapshotController extends BorderPane {
 
     private void snapshotFocusedWindow(File file, boolean doScreenshot) {
         var win = focusedWindow.getValue();
+        snapshotWindow(win, file, doScreenshot);
+    }
+
+    private void snapshotWindow(Window win, File file, boolean doScreenshot) {
         var currentWin = getScene().getWindow();
         if (win != null && win != currentWin) {
             try {
