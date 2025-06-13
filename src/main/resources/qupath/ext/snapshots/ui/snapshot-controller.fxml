@@ -47,6 +47,7 @@
             <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
             <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
             <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
+            <RowConstraints minHeight="10.0" prefHeight="30.0" vgrow="SOMETIMES" />
             <RowConstraints vgrow="SOMETIMES" />
         </rowConstraints>
          <children>
@@ -85,8 +86,8 @@
                <tooltip>
                   <Tooltip text="%format.description" />
                </tooltip></ComboBox>
-            <Label text="%window.label" GridPane.rowIndex="7" />
-            <Label fx:id="labelCurrentWindow" maxWidth="1.7976931348623157E308" style="-fx-font-weight: bold;" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="7">
+            <Label text="%window.label" GridPane.rowIndex="8" />
+            <Label fx:id="labelCurrentWindow" maxWidth="1.7976931348623157E308" style="-fx-font-weight: bold;" text="Label" GridPane.columnIndex="1" GridPane.rowIndex="8">
                <tooltip>
                   <Tooltip text="%window.description" />
                </tooltip></Label>
@@ -99,12 +100,17 @@
                <tooltip>
                   <Tooltip text="%scale.description" />
                </tooltip></Spinner>
-            <ProgressBar fx:id="progressDelay" maxHeight="12.0" maxWidth="1.7976931348623157E308" visible="false" GridPane.columnSpan="2147483647" GridPane.rowIndex="8" />
-            <Button fx:id="btnSize" mnemonicParsing="false" onAction="#promptToSetSize" text="%size.label" GridPane.columnIndex="2" GridPane.rowIndex="7">
+            <ProgressBar fx:id="progressDelay" maxHeight="12.0" maxWidth="1.7976931348623157E308" visible="false" GridPane.columnSpan="2147483647" GridPane.rowIndex="9" />
+            <Button fx:id="btnSize" mnemonicParsing="false" onAction="#promptToSetSize" text="%size.label" GridPane.columnIndex="2" GridPane.rowIndex="8">
                <tooltip>
                   <Tooltip text="%size.description" />
                </tooltip>
             </Button>
+            <CheckBox fx:id="cbDelayWindow" mnemonicParsing="false" text="%delay.window.label" GridPane.columnSpan="2147483647" GridPane.rowIndex="7">
+               <tooltip>
+                  <Tooltip text="%delay.window.description" />
+               </tooltip>
+            </CheckBox>
          </children>
          <padding>
             <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />

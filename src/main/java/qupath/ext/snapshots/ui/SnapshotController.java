@@ -125,6 +125,9 @@ public class SnapshotController extends BorderPane {
     private CheckBox cbCopyToClipboard;
 
     @FXML
+    private CheckBox cbDelayWindow;
+
+    @FXML
     private ComboBox<Format> comboFormat;
 
     @FXML
@@ -328,10 +331,11 @@ public class SnapshotController extends BorderPane {
             processing.set(true);
             var window = getScene().getWindow();
             window.setOpacity(0.0);
-            var winToSnapshot = focusedWindow.getValue();
+            Window winToSnapshot = cbDelayWindow.isSelected() ? focusedWindow.getValue() : null;
             CompletableFuture.delayedExecutor(delay, TimeUnit.SECONDS, Platform::runLater)
                     .execute(() -> {
-                        snapshotWindow(winToSnapshot, file, doScreenshot);
+                        var win = winToSnapshot == null ? focusedWindow.getValue() : winToSnapshot;
+                        snapshotWindow(win, file, doScreenshot);
                         processing.set(false);
                         window.setOpacity(1.0);
                     });
@@ -406,15 +410,15 @@ public class SnapshotController extends BorderPane {
                         ImageIO.write(img, format.getFormatName(), file);
                 }
                 Dialogs.showInfoNotification(
-                        resources.getString("screenshot"),
-                        MessageFormat.format(resources.getString("screenshot.writtenTo"), file.getAbsolutePath())
+                        resources.getString("snapshot"),
+                        MessageFormat.format(resources.getString("snapshot.writtenTo"), file.getAbsolutePath())
                 );
             } catch (IOException e) {
                 Dialogs.showErrorMessage(
-                        resources.getString("screenshot.error"),
-                        MessageFormat.format(resources.getString("screenshot.unableToWrite"), file.getAbsolutePath())
+                        resources.getString("snapshot.error"),
+                        MessageFormat.format(resources.getString("snapshot.unableToWrite"), file.getAbsolutePath())
                 );
-                logger.error("Unable to take screenshot of current window", e);
+                logger.error("Unable to take snapshot of current window", e);
             }
         }
     }
