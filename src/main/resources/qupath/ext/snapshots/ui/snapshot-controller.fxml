@@ -12,6 +12,7 @@
 <?import javafx.scene.layout.BorderPane?>
 <?import javafx.scene.layout.ColumnConstraints?>
 <?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.RowConstraints?>
 
 <fx:root prefWidth="400.0" type="BorderPane" xmlns="http://javafx.com/javafx/23.0.1" xmlns:fx="http://javafx.com/fxml/1">
@@ -49,30 +50,28 @@
             <RowConstraints vgrow="SOMETIMES" />
         </rowConstraints>
          <children>
-            <BorderPane GridPane.columnIndex="1" GridPane.columnSpan="2147483647" GridPane.hgrow="ALWAYS">
-               <center>
-                  <TextField id="tfDirectory" fx:id="tfDirectory" maxWidth="1.7976931348623157E308" promptText="%directory.prompt">
+            <HBox spacing="5.0" GridPane.columnIndex="1" GridPane.columnSpan="2147483647" GridPane.hgrow="ALWAYS">
+               <children>
+                  <TextField id="tfDirectory" fx:id="tfDirectory" maxWidth="1.7976931348623157E308" promptText="%directory.prompt" HBox.hgrow="ALWAYS">
                      <tooltip>
                         <Tooltip text="%directory.description" />
                      </tooltip>
                   </TextField>
-               </center>
-               <right>
-                  <Button fx:id="btnDirectory" mnemonicParsing="false" onAction="#promptForDirectory" text="Choose" BorderPane.alignment="CENTER">
+                  <Button fx:id="btnDirectory" mnemonicParsing="false" onAction="#promptForDirectory" text="Choose">
                      <tooltip>
                         <Tooltip text="%directory.description" />
                      </tooltip>
                   </Button>
-               </right>
-            </BorderPane>
-            <TextField id="tfName" fx:id="tfName" maxWidth="1.7976931348623157E308" promptText="%name.prompt" GridPane.columnIndex="1" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1">
+               </children>
+            </HBox>
+            <TextField id="tfName" fx:id="tfName" maxWidth="1.7976931348623157E308" promptText="%name.prompt" GridPane.columnIndex="1" GridPane.columnSpan="2147483647" GridPane.hgrow="ALWAYS" GridPane.rowIndex="1">
                <tooltip>
                   <Tooltip text="%name.description" />
                </tooltip></TextField>
             <Label text="%directory.label" />
             <Label text="%name.label" GridPane.rowIndex="1" />
-            <Label text="%delay.label" GridPane.rowIndex="5" />
-            <Spinner id="spinnerDelay" fx:id="spinnerDelay" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.columnSpan="2147483647" GridPane.hgrow="ALWAYS" GridPane.rowIndex="5">
+            <Label text="%delay.label" GridPane.rowIndex="6" />
+            <Spinner id="spinnerDelay" fx:id="spinnerDelay" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.columnSpan="2147483647" GridPane.hgrow="ALWAYS" GridPane.rowIndex="6">
                <tooltip>
                   <Tooltip text="%delay.description" />
                </tooltip></Spinner>
@@ -95,8 +94,8 @@
                <tooltip>
                   <Tooltip text="%copy.description" />
                </tooltip></CheckBox>
-            <Label text="%scale.label" GridPane.rowIndex="6" />
-            <Spinner fx:id="spinnerScale" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.columnSpan="2147483647" GridPane.hgrow="ALWAYS" GridPane.rowIndex="6">
+            <Label text="%scale.label" GridPane.rowIndex="5" />
+            <Spinner fx:id="spinnerScale" maxWidth="1.7976931348623157E308" GridPane.columnIndex="1" GridPane.columnSpan="2147483647" GridPane.hgrow="ALWAYS" GridPane.rowIndex="5">
                <tooltip>
                   <Tooltip text="%scale.description" />
                </tooltip></Spinner>
